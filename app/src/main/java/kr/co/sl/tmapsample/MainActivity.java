@@ -278,6 +278,14 @@ public class MainActivity extends AppCompatActivity {
         MenuItem item0 = new MenuItem("초기화", new ArrayList<>());
         menuList.add(item0);
 
+        ArrayList<String> child1 = new ArrayList<>();
+        child1.add("서클(원)");
+        child1.add("폴리곤");
+
+
+        MenuItem item1 = new MenuItem("지도 컨트롤", child1);
+        menuList.add(item1);
+
         ArrayList<String> child2 = new ArrayList<>();
         child2.add("POI자동완성V2");
         MenuItem item2 = new MenuItem("POI", child2);
@@ -463,7 +471,14 @@ public class MainActivity extends AppCompatActivity {
         if (groupPosition == 0) { // 초기화
             initAll();
         }
-        else if (groupPosition == 1) { // POI
+        else if (groupPosition == 1) { // 지도컨트롤
+            if (childPosition == 0) { // 서클
+                selectCircle();
+            } else if (childPosition == 1) { // 폴리곤
+                selectPolygon();
+            }
+        }
+        else if (groupPosition == 2) { // POI
             if (childPosition == 0) { // poi 자동완성 v2
                 if (autoComplete2Layout.getVisibility() == View.GONE) {
                     autoComplete2Layout.setVisibility(View.VISIBLE);
@@ -474,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        else if (groupPosition == 2) { // 경로안내
+        else if (groupPosition == 3) { // 경로안내
             if (childPosition == 0) { // 자동차 경로
                 findPathAllType(TMapData.TMapPathType.CAR_PATH);
             } else if (childPosition == 1) { // 보행자 경로
@@ -485,6 +500,88 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    int circleIndex = 0;
+
+    private void selectCircle() {
+        new AlertDialog.Builder(this)
+                .setTitle("서클(원) 그리기")
+                .setIcon(R.drawable.tmark)
+                .setSingleChoiceItems(R.array.select2, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        if (i == 0) {
+                            TMapCircle circle = new TMapCircle();
+                            circle.setId("circle" + circleIndex++);
+                            circle.setRadius(300);
+                            circle.setAreaColor(Color.BLUE);
+                            circle.setLineColor(Color.BLUE);
+                            circle.setAreaAlpha(100);
+                            circle.setLineAlpha(255);
+                            circle.setCircleWidth(10);
+                            circle.setRadiusVisible(true);
+
+                            TMapPoint point = randomTMapPoint();
+                            circle.setCenterPoint(point);
+
+                            tMapView.setCenterPoint(point.getLatitude(), point.getLongitude());
+                            tMapView.addTMapCircle(circle);
+                        } else {
+                            tMapView.removeAllTMapCircle();
+                        }
+                        dialog.dismiss();
+                    }
+                }).create().show();
+    }
+
+
+    private void selectPolygon() {
+        new AlertDialog.Builder(this)
+                .setTitle("폴리곤 그리기")
+                .setIcon(R.drawable.tmark)
+                .setSingleChoiceItems(R.array.select2, -1, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int position) {
+                        if (position == 0) {
+                            tMapView.removeAllTMapPolygon();
+                            int Min = 3;
+                            int Max = 10;
+                            int rndNum = (int) (Math.random() * (Max - Min));
+
+                            TMapPolygon polygon = new TMapPolygon();
+                            polygon.setId("polygon");
+                            polygon.setLineColor(Color.BLUE);
+                            polygon.setAreaColor(Color.RED);
+                            polygon.setAreaAlpha(50);
+                            polygon.setLineAlpha(255);
+                            polygon.setPolygonWidth(4);
+
+                            TMapPoint point = null;
+
+                            if (rndNum < 3) {
+                                rndNum = rndNum + (3 - rndNum);
+                            }
+
+                            for (int i = 0; i < rndNum; i++) {
+                                point = randomTMapPoint();
+                                polygon.addPolygonPoint(point);
+                            }
+
+                            TMapInfo info = tMapView.getDisplayTMapInfo(polygon.getPolygonPoint());
+                            tMapView.setZoomLevel(info.getZoom());
+                            tMapView.setCenterPoint(info.getPoint().getLatitude(), info.getPoint().getLongitude());
+
+                            tMapView.addTMapPolygon(polygon);
+
+                        } else {
+                            tMapView.removeAllTMapPolygon();
+                        }
+                        dialog.dismiss();
+                    }
+                }).create().show();
+    }
+
+
     private void initAll() {
         tMapView.removeAllTMapMarkerItem2();
         tMapView.removeAllTMapMarkerItem();
